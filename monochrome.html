@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Webgl Monochrome</title>
+  <script type='text/javascript' src='//cdnjs.cloudflare.com/ajax/libs/three.js/r54/three.min.js'></script>
+  <style type='text/css'>
+    * {
+         cursor: none;
+      }
+  </style>
+<script type='text/javascript'>//<![CDATA[
+window.onload=function(){
+var scene = new THREE.Scene();
+var camera = new THREE.OrthographicCamera(0, window.innerWidth, window.innerHeight, 0, 0, window.innerWidth);
+var renderer = new THREE.WebGLRenderer();
+
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+var geometry = new THREE.SphereGeometry(50);
+var material = new THREE.MeshBasicMaterial({
+    color: 0x000000,
+    wireframe: true
+});
+var cube = new THREE.Mesh(geometry, material);
+cube.rotation.x += 0.5;
+cube.position.set(100, 100, -70);
+
+var Syx = 0,
+    Szx = 0,
+    Sxy = 0,
+    Szy = 0,
+    Sxz = 0,
+    Syz = 1;
+var matrix = new THREE.Matrix4();
+matrix.set(1, Syx, Szx, 0,
+           Sxy, 1, Szy, 0,
+           Sxz, Syz, 1, 0,
+           0, 0, 0, 1);
+
+list = {
+    'sand.png': {f: 0.2, b: true},
+    'oak.png': {f: 0.02 },
+    'pine.png': {f: 0.02},
+    'lump.png': {f: 0.005},
+    'grass.png': {f: 0.4},
+    'tuft.png': {f: 0.2},
+    'stones.png': {f: 0.2},
+    'boulder.png': {f: 0.02},
+    'bush.png': {f: 0.05}
+}
+
+geometries = {};
+materials = {};
+Object.keys(list).forEach(function (a) {
+    var image = document.getElementById(a);
+    var texture = new THREE.Texture(image);
+    texture.magFilter = THREE.NearestFilter;
+    texture.needsUpdate = true;
+
+    if (list[a]["b"]) {
+        materials[a] = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            map: texture,
+            side: THREE.DoubleSide,
+            transparent: true,
+            alphaTest: 0.5,
+            depthWrite: false,
+            depthTest: false
+        });
+        geo = new THREE.PlaneGeometry(image.width, image.height);
+        geometries[a] = geo;
+    } else {
+        materials[a] = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            map: texture,
+            side: THREE.DoubleSide,
+            transparent: true,
+            alphaTest: 0.5,
+            depthWrite: true,
+            depthTest: true
+        });
+        geo = new THREE.PlaneGeometry(image.width, image.height);
+        geo.applyMatrix(matrix);
+        geometries[a] = geo;
+    }
+    image.style.position="absolute";
+    image.style.left='-500px';
+    for (var x = 0; x<window.innerHeight; x+=400 ) {
+        for (var y = 0; y<window.innerHeight; y+=400 ) {
+    for (var i = 400; i > 0; i--) {
+        if (Math.random() < list[a]["f"]) {
+            var sprote = new THREE.Mesh(geometries[a], materials[a]);
+            //sprote.name = a;
+            if (list[a]["b"]) {
+                sprote.position.set(Math.round(Math.random() * 400) +x , i + y, -150);
+            } else {
+                sprote.position.set(Math.round(Math.random() * 400) + x, i + y, image.height / 2 - 100);
+            }
+            scene.add(sprote);
+        }
+    }}}
+
+})
+scene.add(cube);
+camera.position.z = 100;
+var SELECTED;
+function onDocumentMouseMove(event) {
+    cube.position.x = event.clientX;
+    cube.position.y = window.innerHeight - event.clientY;
+    if(SELECTED)
+    {
+      console.log("Moving");
+      SELECTED.position.x = cube.position.x;
+      SELECTED.position.y = cube.position.y;
+    }
+}
+function onDocumentMouseDown(event) {
+    var loc = new THREE.Vector3( event.clientX, window.innerHeight - event.clientY, 100);
+    var dir = new THREE.Vector3( 0,0,-1);
+    var ray=new THREE.Raycaster( loc, dir );
+    var intersects = ray.intersectObjects( scene.children );
+    //alert(""+intersects);
+    SELECTED=intersects[ 1 ].object;
+}
+function onDocumentMouseUp(event){
+    SELECTED=null;
+}
+document.addEventListener('mousemove', onDocumentMouseMove, false);
+document.addEventListener('mousedown', onDocumentMouseDown, false);
+document.addEventListener('mouseup', onDocumentMouseUp, false);
+
+function render() {
+    requestAnimationFrame(render);
+    cube.rotation.y += 0.01;
+    renderer.render(scene, camera);
+}
+
+render();
+}//]]>
+
+</script>
+
+
+</head>
+<body>
+<img id="boulder.png" src="boulder.png"/><img id="bush.png" src="bush.png"/><img id="grass.png" src="grass.png"/><img id="lump.png" src="lump.png"/><img id="oak.png" src="oak.png"/><img id="pine.png" src="pine.png"/><img id="sand.png" src="sand.png"/><img id="stones.png" src="stones.png"/><img id="tuft.png" src="tuft.png"/>
+</body>
+</html>
